@@ -10,7 +10,9 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
-    "cozy-konnector-libs": "^3.0.0"
+    "cheerio": "^1.0.0-rc.2",
+    "cozy-konnector-libs": "^3.0.0",
+    "moment": "^2.20.1"
   },
   "scripts": {
     "start": "node index.js",
