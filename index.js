@@ -1,6 +1,7 @@
-const { log, BaseKonnector, requestFactory, saveFiles, addData } = require('cozy-konnector-libs')
+const { log, BaseKonnector, requestFactory, saveBills, errors } = require('cozy-konnector-libs')
+const moment = require('moment')
 const request = requestFactory({
-  debug: true,
+  // debug: true,
   cheerio: true,
   json: false,
   jar: true
@@ -9,21 +10,21 @@ const request = requestFactory({
 const checkFields = fields => {
   log('Checking the presence of the login and password')
   if (fields.login === undefined) {
-    throw new Error('Login is missing');
+    throw new Error('Login is missing')
   }
   if (fields.password === undefined) {
-    throw new Error('Password is missing');
+    throw new Error('Password is missing')
   }
   return Promise.resolve({
     login: fields.login,
     password: fields.password
-  });
-};
+  })
+}
 
 const doLogin = (login, password) => {
+  log('info', 'Logging in')
   return request({
     method: 'POST',
-    jar: true,
     url: 'https://clients.direct-energie.com/connexion-clients-particuliers/',
     form: {
       'tx_deauthentification[login]': login,
@@ -32,31 +33,29 @@ const doLogin = (login, password) => {
       'tx_deauthentification[redirect_url]': '',
       'tx_deauthentification[mdp_oublie]': 'Je+me+connecte'
     }
-  });
-};
+  })
+}
 
 const checkLoginOk = $ => {
-  if($('.formlabel-left.error').length > 0) {
-    throw new Error('Login failed');
+  if ($('.formlabel-left.error').length > 0) {
+    throw new Error(errors.LOGIN_FAILED)
   }
-  return Promise.resolve($);
-};
+  return $
+}
 
 const selectActiveAccount = () => {
-  return request({
-    method: 'GET',
-    jar: true,
-    url: 'https://clients.direct-energie.com/mon-compte/gerer-mes-comptes'
-  }).then($ => {
-    const activeAccounts = $('.compte-actif');
+  log('info', 'Selecting active account')
+  return request('https://clients.direct-energie.com/mon-compte/gerer-mes-comptes')
+  .then($ => {
+    const activeAccounts = $('.compte-actif')
 
-    if(activeAccounts.length === 0) {
-      throw new Error('No active accounts for this login.');
+    if (activeAccounts.length === 0) {
+      throw new Error('No active accounts for this login.')
     }
 
     const anchors = $(activeAccounts[0]).parent().find('a')
 
-    let href = null;
+    let href = null
     for (let i = 0; i < anchors.length; i++) {
       href = $(anchors[i]).attr('href')
       if (href !== '#') {
@@ -72,90 +71,47 @@ const selectActiveAccount = () => {
       href = `/${href}`
     }
 
-    log("Going to the active account's page.")
+    log('info', "Going to the active account's page.")
 
-    return request({
-      method: 'GET',
-      jar: true,
-      url: `https://clients.direct-energie.com${href}`
-    })
-  });
-};
+    return request(`https://clients.direct-energie.com${href}`)
+  })
+}
 
-const parseBills = () => {
-  return request( {
-    method: 'GET',
-    jar: true,
-    url: 'https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/'
-  }).then($ => {
-    const bills = [];
+const normalizeAmount = amount => parseFloat(amount.replace('€', '').trim())
 
-    $('table.account-summary').each(function forEachTable () {
-      const td = $(this)
+const parseBills = (fields) => {
+  log('info', 'Parsing bills')
+  return request('https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/')
+  .then($ => {
+    const bills = []
 
-      let title = td.find('td.status').text()
-      let date = td.find('td.date').text()
-      let amount = td.find('td.tarif').text()
-      let paidDate = td.find('td.info').text()
-      let downloadLink = td.find('td.download a').attr('href')
+    Array.from($('.ec_fr_historique_facture_echeancier__liste .row')).forEach(row => {
+      Array.from($(row).find('table tbody tr')).forEach(tr => {
+        if ($(tr).find('img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]').length === 0) return
 
-      // Sanitize.
-      title = title.trim()
-
-      date = moment(date, 'DD/MM/YYYY')
-
-      paidDate = paidDate.replace('Payée le', '')
-        .replace('En cours', '')
-        .replace('Terminé', '')
-        .trim()
-      paidDate = paidDate.length ? paidDate : date
-      paidDate = moment(paidDate, 'DD/MM/YYYY')
-
-      amount = amount.replace(',', '.')
-        .replace('€', '')
-        .replace('par mois', '')
-        .replace('Montant en votre faveur :', '')
-        .trim()
-      amount = parseFloat(amount)
-
-      downloadLink = `https://clients.direct-energie.com/${downloadLink}`
-
-      const newBill = {
-        date,
-        paidDate: paidDate || date,
-        amount,
-        vendor: 'DirectEnergie',
-        type: 'energy',
-        pdfurl: downloadLink,
-        content: title
-      }
-
-      bills.push(newBill);
-
-      if (!bills.fetched.length) {
-        log('No bills fetched')
-        throw new Error('No bills fetched today.')
-        return
-      }
-
-      log(`Found ${bills.fetched.length} bills.`)
-
-      return saveBills(bills, fields.folderPath, {
-        timeout: Date.now() + 60 * 1000,
-        identifiers,
-        dateDelta: 10,
-        amountDelta: 0.1
+        const [, amount, date] = Array.from($(tr).find('td')).map(elem => $(elem).text())
+        const dateMoment = moment(date, 'DD/MM/YYYY')
+        bills.push({
+          amount: normalizeAmount(amount),
+          date: dateMoment.toDate()
+        })
       })
     })
+    log('info', `found ${bills.length} bills`)
+
+    return bills
   })
-};
+}
 
 const start = fields => {
   return checkFields(fields)
     .then(({login, password}) => doLogin(login, password))
     .then($ => checkLoginOk($))
     .then($ => selectActiveAccount())
-    .then($ => parseBills())
-};
+    .then($ => parseBills(fields))
+    .then(bills => saveBills(bills, fields, {
+      identifiers: ['direct energie']
+    }))
+}
 
-module.exports = new BaseKonnector(start);
+module.exports = new BaseKonnector(start)
