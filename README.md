@@ -11,7 +11,7 @@ What's Cozy?
 What's this new konnector?
 --------------------------
 
-<YOUR DESCRIPTION HERE>
+The konnector gets information from Direct Energie (french electricity/gaz provider)
 
 ### Open a Pull-Request
 
@@ -26,13 +26,15 @@ find more documentation about it there.
 
 If you just want to test this connector without any cozy available.
 
-You first need an installed [nodejs] (LTS version is fine).
+You first need an installed [nodejs] (LTS version is fine). This project has a '.nvmrc' file, so if you use nvm, simply do 'nvm use'.
+
+We also suggest you tu use [yarn] instead of npm for node packages.
 
 Just run :
 
 ```sh
-npm install
-npm run standalone
+yarn
+yarn standalone
 ```
 
 The requests to the cozy-stack will be stubbed using the [./fixture.json] file as source of data
@@ -45,8 +47,8 @@ If you do not want to have to install the konnector on a cozy v3 to test it, you
 konnector as an OAuth application with the following commands :
 
 ```sh
-npm install
-npm run dev
+yarn
+yarn dev
 ```
 
 This command will register your konnector as an OAuth application to the cozy-stack. By default,
@@ -77,7 +79,7 @@ The connector is run by calling npm start with the following envrionment variabl
       "arguments":{
         "account":"cf31eaef5d899404a7e8c3737c1c2d1f",
         "folder_to_save":"folderPathId",
-        "slug":"mykonnector"
+        "slug":"directenergie"
       }
     }
   }
@@ -92,13 +94,13 @@ parameters for your konnector.
 To be able to run the connector, the cozy stack needs a connector which is built into only one
 file, without needing to npm install it, this will be a lot faster to install.
 
-There is a command in package.json to help you to do that : `npm run build`
+There is a command in package.json to help you to do that : `yarn build`
 
 This command uses [webpack] to bundle all the code needed by your connector into one file.
 
 This will generate an index.js file in the build directory and add all files the connector will need.
 
-You can deploy this build by using the specific script : `npm run deploy`
+You can deploy this build by using the specific script : `yarn deploy`
 
 This command will commit and push your build in the branch `build` fo your project.
 
@@ -132,12 +134,12 @@ Now Travis is ready to build your project, it should build it each time your pus
 We use [standard] to format the `index.js` file. You can run it with:
 
 ```sh
-npm run lint
+yarn lint
 ```
 
 ### Maintainer
 
-The lead maintainers for this konnector is <YOUR NAME>
+The lead maintainers for this konnector is Brice Coquereau
 
 
 ### Get in touch
@@ -153,7 +155,7 @@ You can reach the Cozy Community by:
 License
 -------
 
-<YOUR KONNECTOR NAME> is developed by <your name> and distributed under the [AGPL v3 license][agpl-3.0].
+Direct Energie is developed by Brice Coquereau and distributed under the [AGPL v3 license][agpl-3.0].
 
 [cozy]: https://cozy.io "Cozy Cloud"
 [agpl-3.0]: https://www.gnu.org/licenses/agpl-3.0.html
