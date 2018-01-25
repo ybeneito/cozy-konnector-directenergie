@@ -1,32 +1,45 @@
 {
   "version": "1.0.0",
-  "name": "konnector name",
+  "name": "Direct Energie",
   "type": "node",
-  "slug": "konnectorslug",
-  "description": "description",
-  "source": "git://github.com/cozy/cozy-konnector-thename.git",
+  "slug": "directenergie",
+  "description": "Récupère toutes factures et échéanciers Direct Energie",
+  "source": "git://github.com/konnectors/cozy-konnector-directenergie.git",
   "locales": {
     "fr": {
+      "description": "Récupère toutes factures et échéanciers Direct Energie",
       "permissions": {
-        "books": {
-          "description": "Utilisé pour sauvegarder les références de vos livres"
+        "bills": {
+          "description": "Utilisé pour sauvegarder les données de facturation"
         },
         "files": {
-          "description": "Utilisé pour sauvegarder les couvertures de vos livres"
+          "description": "Utilisé pour sauvegarder les factures"
+        }
+      }
+    },
+    "en": {
+      "description": "Retrieves all your Direct Energie invoices",
+      "permissions": {
+        "bills": {
+          "description": "Used to save billing data"
         },
-        "accounts": {
-          "description": "Utilisé pour récupérer les informations de votre compte"
+        "files": {
+          "description": "Used to save invoices"
         }
       }
     }
   },
   "permissions": {
-    "books": {
-      "description": "Required to save books' references",
-      "type": "io.cozy.books"
+    "bank operations": {
+      "description": "Required to link bills to bank operations",
+      "type": "io.cozy.bank.operations"
+    },
+    "bills": {
+      "description": "Required to save the bills data",
+      "type": "io.cozy.bills"
     },
     "files": {
-      "description": "Required to save the covers",
+      "description": "Required to save the bills",
       "type": "io.cozy.files"
     },
     "accounts": {
@@ -36,7 +49,7 @@
     }
   },
   "developer": {
-    "name": "cozy",
-    "url": "cozy.io"
+    "name": "Brice Coquereau",
+    "url": "brice@coquereau.fr"
   }
 }

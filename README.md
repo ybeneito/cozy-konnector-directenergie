@@ -1,5 +1,5 @@
-[Cozy][cozy] <YOUR SUPER NEW KONNECTOR NAME>
-=======================================
+[Cozy][cozy] Direct Energie
+===========================
 
 What's Cozy?
 ------------
@@ -8,10 +8,10 @@ What's Cozy?
 
 [Cozy] is a platform that brings all your web services in the same private space. With it, your webapps and your devices can share data easily, providing you with a new experience. You can install Cozy on your own hardware where no one's tracking you.
 
-What's this new konnector?
+What's this konnector?
 --------------------------
 
-The konnector gets information from Direct Energie (french electricity/gaz provider)
+The konnector gets information from [Direct Energie](https://clients.direct-energie.com/connexion-clients-particuliers/) (french electricity/gaz provider)
 
 ### Open a Pull-Request
 
@@ -168,3 +168,4 @@ Direct Energie is developed by Brice Coquereau and distributed under the [AGPL v
 [webpack]: https://webpack.js.org
 [yarn]: https://yarnpkg.com
 [travis]: https://travis-ci.org
+[directenergie]: https://travis-ci.org
