@@ -79,21 +79,37 @@ const selectActiveAccount = () => {
 
 const normalizeAmount = amount => parseFloat(amount.replace('€', '').trim())
 
+const getRowType = $row => {
+  const isGaz = $row.find('span.picto__puce__gaz').length !== 0
+  const isElec = $row.find('span.picto__puce__elec').length !== 0
+  return isGaz ? 'gaz' : isElec ? 'elec' : 'other'
+}
+
 const parseBills = (fields) => {
   log('info', 'Parsing bills')
   return request('https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/')
   .then($ => {
     const bills = []
+    
+    Array.from($('.ec_fr_historique_facture_echeancier__liste > div > .row')).forEach(row => {
+      const $row = $(row)
+      
+      const type = getRowType($row)
+      
+      const billRelativeUrl = $row.find('a:contains("Télécharger")').attr('href')
+      const billEmissionDate = moment($row.find('.columns.nine > .row .columns.two').text(), 'DD/MM/YYYY')
+      
+      Array.from($row.find('table tbody tr')).forEach(tr => {
+        const $tr = $(tr);
+        if ($tr.find('img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]').length === 0) return
 
-    Array.from($('.ec_fr_historique_facture_echeancier__liste .row')).forEach(row => {
-      Array.from($(row).find('table tbody tr')).forEach(tr => {
-        if ($(tr).find('img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]').length === 0) return
-
-        const [, amount, date] = Array.from($(tr).find('td')).map(elem => $(elem).text())
+        const [, amount, date] = Array.from($tr.find('td')).map(elem => $(elem).text())
         const dateMoment = moment(date, 'DD/MM/YYYY')
         bills.push({
           amount: normalizeAmount(amount),
-          date: dateMoment.toDate()
+          date: dateMoment.toDate(),
+          fileurl: `https://clients.direct-energie.com/${billRelativeUrl}`,
+          filename: `echeancier_${type}_${billEmissionDate.format('YYYYMMDD')}_directenergie.pdf`
         })
       })
     })

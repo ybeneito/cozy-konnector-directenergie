@@ -1,13 +1,13 @@
 {
-  "name": "cozy-konnector-template",
+  "name": "cozy-konnector-directenergie",
   "version": "1.0.0",
-  "description": "",
+  "description": "Cozy v3 Konnector for Direct Energie",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cozy/cozy-konnector-template.git"
+    "url": "git+https://github.com/briced/cozy-konnector-v3-directenergie.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Brice Coquereau <brice@coquereau.fr>",
   "license": "AGPL-3.0",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
@@ -15,15 +15,15 @@
     "moment": "^2.20.1"
   },
   "scripts": {
-    "start": "node index.js",
-    "dev": "cozy-konnector-dev",
-    "standalone": "cozy-konnector-standalone",
-    "standalone:record": "REPLAY=record cozy-konnector-standalone",
-    "standalone:replay": "REPLAY=replay cozy-konnector-standalone",
+    "start": "node src/index.js",
+    "dev": "cozy-konnector-dev src/index.js",
+    "standalone": "cozy-konnector-standalone src/index.js",
+    "standalone:record": "REPLAY=record cozy-konnector-standalone src/index.js",
+    "standalone:replay": "REPLAY=replay cozy-konnector-standalone src/index.js",
     "build": "webpack",
-    "lint": "standard --fix konnector.js",
+    "lint": "standard --fix src/index.js",
     "deploy:travis": "git-directory-deploy --username <YOUR_GH_USERNAME> --email <YOUR_EMAIL> --directory build/ --repo=https://$GITHUB_TOKEN@github.com/<USERNAME_GH>/<SLUG_GH>.git",
-    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/cozy/cozy-konnector-template.git"
+    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/briced/cozy-konnector-v3-directenergie.git"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.0.1",
