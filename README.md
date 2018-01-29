@@ -11,7 +11,7 @@ What's Cozy?
 What's this konnector?
 --------------------------
 
-The konnector gets information from [Direct Energie](https://clients.direct-energie.com/connexion-clients-particuliers/) (french electricity/gaz provider)
+The konnector gets information from [Direct Energie](directenergie) (french electricity/gaz provider)
 
 ### Open a Pull-Request
 
@@ -168,4 +168,4 @@ Direct Energie is developed by Brice Coquereau and distributed under the [AGPL v
 [webpack]: https://webpack.js.org
 [yarn]: https://yarnpkg.com
 [travis]: https://travis-ci.org
-[directenergie]: https://travis-ci.org
+[directenergie]: https://clients.direct-energie.com/connexion-clients-particuliers/
