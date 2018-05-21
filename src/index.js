@@ -1,4 +1,10 @@
-const { log, BaseKonnector, requestFactory, saveBills, errors } = require('cozy-konnector-libs')
+const {
+  log,
+  BaseKonnector,
+  requestFactory,
+  saveBills,
+  errors
+} = require('cozy-konnector-libs')
 const moment = require('moment')
 const request = requestFactory({
   // debug: true,
@@ -45,15 +51,18 @@ const checkLoginOk = $ => {
 
 const selectActiveAccount = () => {
   log('info', 'Selecting active account')
-  return request('https://clients.direct-energie.com/mon-compte/gerer-mes-comptes')
-  .then($ => {
+  return request(
+    'https://clients.direct-energie.com/mon-compte/gerer-mes-comptes'
+  ).then($ => {
     const activeAccounts = $('.compte-actif')
 
     if (activeAccounts.length === 0) {
       throw new Error('No active accounts for this login.')
     }
 
-    const anchors = $(activeAccounts[0]).parent().find('a')
+    const anchors = $(activeAccounts[0])
+      .parent()
+      .find('a')
 
     let href = null
     for (let i = 0; i < anchors.length; i++) {
@@ -85,31 +94,49 @@ const getRowType = $row => {
   return isGaz ? 'gaz' : isElec ? 'elec' : 'other'
 }
 
-const parseBills = (fields) => {
+const parseBills = () => {
   log('info', 'Parsing bills')
-  return request('https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/')
-  .then($ => {
+  return request(
+    'https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/'
+  ).then($ => {
     const bills = []
-    
-    Array.from($('.ec_fr_historique_facture_echeancier__liste > div > .row')).forEach(row => {
-      const $row = $(row)
-      
-      const type = getRowType($row)
-      
-      const billRelativeUrl = $row.find('a:contains("Télécharger")').attr('href')
-      const billEmissionDate = moment($row.find('.columns.nine > .row .columns.two').text(), 'DD/MM/YYYY')
-      
-      Array.from($row.find('table tbody tr')).forEach(tr => {
-        const $tr = $(tr);
-        if ($tr.find('img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]').length === 0) return
 
-        const [, amount, date] = Array.from($tr.find('td')).map(elem => $(elem).text())
+    Array.from(
+      $('.ec_fr_historique_facture_echeancier__liste > div > .row')
+    ).forEach(row => {
+      const $row = $(row)
+
+      const type = getRowType($row)
+
+      const billRelativeUrl = $row
+        .find('a:contains("Télécharger")')
+        .attr('href')
+      const billEmissionDate = moment(
+        $row.find('.columns.nine > .row .columns.two').text(),
+        'DD/MM/YYYY'
+      )
+
+      Array.from($row.find('table tbody tr')).forEach(tr => {
+        const $tr = $(tr)
+        if (
+          $tr.find(
+            'img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]'
+          ).length === 0
+        ) {
+          return
+        }
+
+        const [, amount, date] = Array.from($tr.find('td')).map(elem =>
+          $(elem).text()
+        )
         const dateMoment = moment(date, 'DD/MM/YYYY')
         bills.push({
           amount: normalizeAmount(amount),
           date: dateMoment.toDate(),
           fileurl: `https://clients.direct-energie.com/${billRelativeUrl}`,
-          filename: `echeancier_${type}_${billEmissionDate.format('YYYYMMDD')}_directenergie.pdf`
+          filename: `echeancier_${type}_${billEmissionDate.format(
+            'YYYYMMDD'
+          )}_directenergie.pdf`
         })
       })
     })
@@ -121,13 +148,15 @@ const parseBills = (fields) => {
 
 const start = fields => {
   return checkFields(fields)
-    .then(({login, password}) => doLogin(login, password))
+    .then(({ login, password }) => doLogin(login, password))
     .then($ => checkLoginOk($))
-    .then($ => selectActiveAccount())
-    .then($ => parseBills(fields))
-    .then(bills => saveBills(bills, fields, {
-      identifiers: ['direct energie']
-    }))
+    .then(() => selectActiveAccount())
+    .then(() => parseBills(fields))
+    .then(bills =>
+      saveBills(bills, fields, {
+        identifiers: ['direct energie']
+      })
+    )
 }
 
 module.exports = new BaseKonnector(start)
