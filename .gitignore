@@ -6,7 +6,7 @@ yarn-error.log
 # connector data files
 .account
 .token.json
-konnector-dev-config.json
+konnector-dev-config.json*
 
 # Build
 build/
