@@ -6,6 +6,7 @@ env:
   - GH_USER_EMAIL="travis@example.org"
   - GH_USER_NAME="cozy-bot"
   - DEPLOY_REPOSITORY="git@github.com:konnectors/cozy-konnector-directenergie.git"
+  - secure: gtm7Lkx2AAsR3mV7DUp1dD7pLy7NmOK5s49YLihxnSLol91D+01H/Pj+MWW/0iRqW8WM6HBYS4oQO26xFpVDOF+TFEkKPxkbCYuNrz0jvh+BfjUrL6DVu0n/KbYMC01/LH4CtdoCoKmMXbNlDxZ8FN8VHvOzVy1QsnTaqlS1F4BXATMZ9XVsqTBlKzh2F7nbzckhJ6bdTsX3sf3G8ixw2+3NRHVhVN/zI+BvRz0jd78sN5Y+/hJWWEgcQBfxFLYGJgIx4cYUb9DBexTVZqRKeK4NvJBcN0HvgQKh8yaAjPfMmAc7IEDw5AnqEUulzRNIoWFoEg4u1J05EINhtNGf4llKTemW9G1+O1qzOJxL9ty7596QDp9rGaU+HmGB9CSg/2mwNQPfjmguzhNd0r+tCAJh923YZF2CbH3eA4l0SiRPv1mWUBbelgGyxnMmjPQergM2kUzLwuuwVYFVDj1ZXCLaZyWnW5vFbB3mcNu3uPQjYeqYrZYQVGPhdgzDb1FzKIh9rzwoTS9e7g2NMWMBtcOSAzMCBmnQp+tB1siYeY239d8qa/jstH5XwsEIkfRbjecGWttz2QegJiRhDN++zV5Jl8XCWuqmW+/jKooMpcOkic5UF/XGmWdvQ1lrJvPSUqyMqdPIO3XSBxcNQ2KkdyeMjiwkmf3jvSWp2SGH7nU=
 cache:
   yarn: true
   directories:
@@ -17,19 +18,18 @@ deploy:
 - provider: script
   skip-cleanup: true
   script: DEPLOY_BRANCH=build yarn deploy
-  # script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
   on:
     branch: master
 - provider: script
   skip-cleanup: true
-  script: DEPLOY_BRANCH=latest yarn deploy
+  script: DEPLOY_BRANCH=latest yarn deploy && yarn publish:cozy
   on:
     branch: prod
-# - provider: script
-#   skip-cleanup: true
-#   script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
-#   on:
-#     tags: true
+ - provider: script
+   skip-cleanup: true
+   script: DEPLOY_BRANCH=build yarn deploy && yarn publish:cozy
+   on:
+     tags: true
 before_install:
 - openssl aes-256-cbc -K $encrypted_c4669962f2f7_key -iv $encrypted_c4669962f2f7_iv
   -in github_deploy_key.enc -out /tmp/github_deploy_key -d
