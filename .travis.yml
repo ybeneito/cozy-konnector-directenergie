@@ -11,6 +11,10 @@ cache:
   yarn: true
   directories:
   - node_modules
+branches:
+  except:
+  - build
+  - latest
 script:
 - yarn lint
 - yarn build
@@ -22,14 +26,9 @@ deploy:
     branch: master
 - provider: script
   skip-cleanup: true
-  script: DEPLOY_BRANCH=latest yarn deploy && yarn publish:cozy
+  script: DEPLOY_BRANCH=build yarn deploy && yarn publish:cozy
   on:
-    branch: prod
- - provider: script
-   skip-cleanup: true
-   script: DEPLOY_BRANCH=build yarn deploy && yarn publish:cozy
-   on:
-     tags: true
+    tags: true
 before_install:
 - openssl aes-256-cbc -K $encrypted_c4669962f2f7_key -iv $encrypted_c4669962f2f7_iv
   -in github_deploy_key.enc -out /tmp/github_deploy_key -d
