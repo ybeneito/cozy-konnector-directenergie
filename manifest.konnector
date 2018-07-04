@@ -83,5 +83,6 @@
         }
       }
     }
-  }
+  },
+  "banksTransactionRegExp": "\\bdirect energie\\b"
 }
