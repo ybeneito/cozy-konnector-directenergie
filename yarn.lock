@@ -1235,9 +1235,9 @@ cozy-jobs-cli@1.4.7:
     regenerator-runtime "0.12.0"
     replay "2.3.0"
 
-cozy-konnector-libs@4.7.2:
-  version "4.7.2"
-  resolved "https://registry.yarnpkg.com/cozy-konnector-libs/-/cozy-konnector-libs-4.7.2.tgz#3b42ad33bfcc9030e8c136d5c4731bbdf53366b5"
+cozy-konnector-libs@4.8.1:
+  version "4.8.1"
+  resolved "https://registry.yarnpkg.com/cozy-konnector-libs/-/cozy-konnector-libs-4.8.1.tgz#3127e10219e5b4e3a4e62cdab45bd2788492ff1a"
   dependencies:
     bluebird "3.5.1"
     bluebird-retry "0.11.0"
@@ -1278,18 +1278,6 @@ cozy-konnector-libs@^4.7.2:
     uuid "3.3.2"
 
 cozy-logger@1.1.9, cozy-logger@^1.1.9:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/cozy-logger/-/cozy-logger-1.1.9.tgz#ea35beeb14b4cb80b363a131d324be3a3b2f8db7"
-  dependencies:
-    json-stringify-safe "5.0.1"
-
-cozy-logger@^1.1.8:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/cozy-logger/-/cozy-logger-1.1.8.tgz#4ef7f009b7e63f6d0e1d8515e3758ffa351ea16e"
-  dependencies:
-    json-stringify-safe "5.0.1"
-
-cozy-logger@^1.1.9:
   version "1.1.9"
   resolved "https://registry.yarnpkg.com/cozy-logger/-/cozy-logger-1.1.9.tgz#ea35beeb14b4cb80b363a131d324be3a3b2f8db7"
   dependencies:
