@@ -133,6 +133,7 @@ const parseBills = () => {
         bills.push({
           amount: normalizeAmount(amount),
           date: dateMoment.toDate(),
+          vendor: 'Direct Energie',
           fileurl: `https://clients.direct-energie.com/${billRelativeUrl}`,
           filename: `echeancier_${type}_${billEmissionDate.format(
             'YYYYMMDD'
