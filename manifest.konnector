@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "Direct Energie",
   "type": "konnector",
   "language": "node",
@@ -8,7 +8,9 @@
   "source": "git://github.com/konnectors/cozy-konnector-directenergie.git",
   "editor": "Brice Coquereau",
   "vendor_link": "https://clients.direct-energie.com/connexion-clients-particuliers/",
-  "categories": ["energy"],
+  "categories": [
+    "energy"
+  ],
   "fields": {
     "login": {
       "type": "email"
@@ -38,14 +40,19 @@
     },
     "accounts": {
       "type": "io.cozy.accounts",
-      "verbs": ["GET"]
+      "verbs": [
+        "GET"
+      ]
     }
   },
   "developer": {
     "name": "Brice Coquereau",
     "url": "brice@coquereau.fr"
   },
-  "langs": ["fr", "en"],
+  "langs": [
+    "fr",
+    "en"
+  ],
   "locales": {
     "fr": {
       "short_description": "Récupère toutes factures et échéanciers Direct Energie",
