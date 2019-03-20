@@ -5,7 +5,7 @@
   "language": "node",
   "icon": "directenergie.png",
   "slug": "directenergie",
-  "source": "git://github.com/konnectors/cozy-konnector-directenergie.git",
+  "source": "git@github.com:konnectors/cozy-konnector-directenergie.git",
   "editor": "Brice Coquereau",
   "vendor_link": "https://clients.direct-energie.com/connexion-clients-particuliers/",
   "categories": [
