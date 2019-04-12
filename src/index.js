@@ -31,7 +31,7 @@ const doLogin = (login, password) => {
   log('info', 'Logging in')
   return request({
     method: 'POST',
-    url: 'https://clients.direct-energie.com/connexion-clients-particuliers/',
+    url: 'https://clients-total.direct-energie.com/connexion-clients-particuliers/',
     form: {
       'tx_deauthentification[login]': login,
       'tx_deauthentification[password]': password,
@@ -52,7 +52,7 @@ const checkLoginOk = $ => {
 const selectActiveAccount = () => {
   log('info', 'Selecting active account')
   return request(
-    'https://clients.direct-energie.com/mon-compte/gerer-mes-comptes'
+    'https://clients-total.direct-energie.com/mon-compte/gerer-mes-comptes'
   ).then($ => {
     const activeAccounts = $('.compte-actif')
 
@@ -82,7 +82,7 @@ const selectActiveAccount = () => {
 
     log('info', "Going to the active account's page.")
 
-    return request(`https://clients.direct-energie.com${href}`)
+    return request(`https://clients-total.direct-energie.com${href}`)
   })
 }
 
@@ -97,7 +97,7 @@ const getRowType = $row => {
 const parseBills = () => {
   log('info', 'Parsing bills')
   return request(
-    'https://clients.direct-energie.com/mes-factures/ma-facture-mon-echeancier/'
+    'https://clients-total.direct-energie.com/mes-factures/ma-facture-mon-echeancier/'
   ).then($ => {
     const bills = []
 
@@ -134,7 +134,7 @@ const parseBills = () => {
           amount: normalizeAmount(amount),
           date: dateMoment.toDate(),
           vendor: 'Direct Energie',
-          fileurl: `https://clients.direct-energie.com/${billRelativeUrl}`,
+          fileurl: `https://clients-total.direct-energie.com/${billRelativeUrl}`,
           filename: `echeancier_${type}_${billEmissionDate.format(
             'YYYYMMDD'
           )}_directenergie.pdf`
