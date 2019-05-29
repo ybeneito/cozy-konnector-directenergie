@@ -214,12 +214,14 @@ const parseBills = async type => {
         })
       }
     } else {
-      const { vendorRef, label, date, fileurl, amount } = doc
+      const { vendorRef, label, date, fileurl, amount, status } = doc
+      const isRefund = status.includes('Remboursée')
       bills.push({
         vendorRef,
         label,
         amount,
         date,
+        isRefund,
         fileurl: `https://total.direct-energie.com${fileurl}`,
         filename: `echeancier_${
           type === 'electricite' ? 'elec' : type
