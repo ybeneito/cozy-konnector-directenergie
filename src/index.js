@@ -7,7 +7,8 @@ const {
   BaseKonnector,
   requestFactory,
   saveBills,
-  errors
+  errors,
+  scrape
 } = require('cozy-konnector-libs')
 const moment = require('moment')
 const request = requestFactory({
@@ -59,90 +60,179 @@ const selectActiveAccount = async () => {
   const $ = await request(
     'https://clients-total.direct-energie.com/mon-compte/gerer-mes-comptes'
   )
-  const activeAccounts = $('.compte-actif')
+  const accounts = scrape(
+    $,
+    {
+      label: {
+        sel: 'h3.js-saisie_nom_compte input',
+        attr: 'value'
+      },
+      isActive: {
+        sel: '.compte-actif',
+        fn: el => Boolean($(el).length)
+      },
+      refClient: {
+        sel: '.liste_infos_yoom > .row:nth-child(1) > div:nth-child(2)'
+      },
+      address: {
+        sel: '.liste_infos_yoom > .row:nth-child(3) > div:nth-child(2)'
+      },
+      link: {
+        sel: 'a.btn-round',
+        attr: 'href',
+        parse: href => 'https://clients-total.direct-energie.com/' + href
+      }
+    },
+    '.ec_rattacher_compte__compte'
+  )
 
+  const activeAccounts = accounts.filter(account => account.isActive)
   if (activeAccounts.length === 0) {
     throw new Error('No active accounts for this login.')
   }
 
-  const anchors = $(activeAccounts[0])
-    .parent()
-    .find('a')
-
-  let href = null
-  for (let i = 0; i < anchors.length; i++) {
-    href = $(anchors[i]).attr('href')
-    if (href !== '#') {
-      break
-    }
-  }
-
-  if (href === null) {
-    throw new Error("Couldn't find link to the active account.")
-  }
-
-  if (href[0] !== '/') {
-    href = `/${href}`
-  }
+  const href = activeAccounts[0].link
 
   log('info', "Going to the active account's page.")
 
-  return request(`https://clients-total.direct-energie.com${href}`)
+  return request(href)
 }
 
-const normalizeAmount = amount => parseFloat(amount.replace('€', '').trim())
-
-const getRowType = $row => {
-  const isGaz = $row.find('span.picto__puce__gaz').length !== 0
-  const isElec = $row.find('span.picto__puce__elec').length !== 0
-  return isGaz ? 'gaz' : isElec ? 'elec' : 'other'
-}
-
-const parseBills = async () => {
-  log('info', 'Parsing bills')
-  const $ = await request(
-    'https://clients-total.direct-energie.com/mes-factures/ma-facture-mon-echeancier/'
+const normalizeAmount = amount => {
+  // ignore echeancier
+  if (amount.includes('/')) return false
+  return parseFloat(
+    amount
+      .replace('€', '')
+      .replace(',', '.')
+      .trim()
   )
+}
+
+const parseBills = async type => {
+  log('info', 'Parsing bills')
+  let $
+  try {
+    $ = await request(
+      `https://total.direct-energie.com/clients/mes-factures/mes-factures-${type}/mon-historique-de-factures`
+    )
+  } catch (err) {
+    log('info', err.message.substring(0, 60))
+    log('info', `found no ${type} bills on this account`)
+    return []
+  }
+
+  const docs = scrape(
+    $,
+    {
+      label: {
+        sel: '.detail-facture__label strong'
+      },
+      vendorRef: {
+        sel: '.text--body',
+        parse: ref => ref.match(/^N° (.*)$/).pop()
+      },
+      date: {
+        sel: '.detail-facture__date',
+        parse: date => moment(date, 'DD/MM/YYYY').toDate()
+      },
+      status: {
+        sel: '.detail-facture__statut'
+      },
+      amount: {
+        sel: '.detail-facture__montant',
+        parse: normalizeAmount
+      },
+      isEcheancier: {
+        sel: '.detail-facture__action.btn-bas-nivo2',
+        attr: 'class',
+        parse: Boolean
+      },
+      fileurl: {
+        sel: '.btn--telecharger',
+        attr: 'href'
+      },
+      subBills: {
+        sel: 'span:nth-child(1)',
+        fn: el => {
+          const $details = $(el)
+            .closest('.detail-facture')
+            .next()
+
+          if ($details.hasClass('action__display-zone')) {
+            const fileurl = $details.find('.btn--telecharger').attr('href')
+            return Array.from($details.find('tbody tr'))
+              .map(el => {
+                let date = $(el)
+                  .find('td:nth-child(4)')
+                  .text()
+                  .match(/Payée le (.*)/)
+                if (date) date = moment(date.slice(1), 'DD/MM/YYYY').toDate()
+                return {
+                  amount: normalizeAmount(
+                    $(el)
+                      .find('td:nth-child(2)')
+                      .text()
+                  ),
+                  date,
+                  fileurl
+                }
+              })
+              .filter(bill => bill.date)
+          }
+
+          return false
+        }
+      }
+    },
+    '.detail-facture'
+  ).filter(bill => !(bill.amount === false && bill.isEcheancier === false))
+
   const bills = []
 
-  Array.from(
-    $('.ec_fr_historique_facture_echeancier__liste > div > .row')
-  ).forEach(row => {
-    const $row = $(row)
-
-    const type = getRowType($row)
-
-    const billRelativeUrl = $row.find('a:contains("Télécharger")').attr('href')
-    const billEmissionDate = moment(
-      $row.find('.columns.nine > .row .columns.two').text(),
-      'DD/MM/YYYY'
-    )
-
-    Array.from($row.find('table tbody tr')).forEach(tr => {
-      const $tr = $(tr)
-      if (
-        $tr.find(
-          'img[src="/typo3conf/ext/de_facturation/Ressources/Images/ech_ok.png"]'
-        ).length === 0
-      ) {
-        return
+  for (const doc of docs) {
+    if (doc.subBills) {
+      for (const subBill of doc.subBills) {
+        const { vendorRef, label } = doc
+        const echDate = doc.date
+        const { amount, date, fileurl } = subBill
+        bills.push({
+          vendorRef,
+          label,
+          amount,
+          date,
+          type,
+          fileurl: `https://total.direct-energie.com${fileurl}`,
+          filename: `echeancier_${
+            type === 'electricite' ? 'elec' : type
+          }_${moment(echDate).format('YYYYMMDD')}_directenergie.pdf`,
+          vendor: 'Direct Energie',
+          metadata: {
+            importDate: new Date(),
+            version: 3
+          }
+        })
       }
-
-      const [, amount, date] = Array.from($tr.find('td')).map(elem =>
-        $(elem).text()
-      )
-      const dateMoment = moment(date, 'DD/MM/YYYY')
+    } else {
+      const { vendorRef, label, date, fileurl, amount } = doc
       bills.push({
-        amount: normalizeAmount(amount),
-        date: dateMoment.toDate(),
+        vendorRef,
+        label,
+        amount,
+        date,
+        fileurl: `https://total.direct-energie.com${fileurl}`,
+        filename: `echeancier_${
+          type === 'electricite' ? 'elec' : type
+        }_${moment(date).format('YYYYMMDD')}_directenergie.pdf`,
         vendor: 'Direct Energie',
-        fileurl: `https://clients-total.direct-energie.com/${billRelativeUrl}`,
-        filename: `echeancier_${type}_${billEmissionDate.format(
-          'YYYYMMDD'
-        )}_directenergie.pdf`
+        metadata: {
+          importDate: new Date(),
+          version: 3
+        }
       })
-    })
-  })
+    }
+  }
+
   log('info', `found ${bills.length} bills`)
 
   return bills
@@ -153,11 +243,16 @@ const start = async fields => {
   const $ = await doLogin(login, password)
   await checkLoginOk($)
   await selectActiveAccount()
-  const bills = await parseBills(fields)
 
-  return saveBills(bills, fields, {
-    identifiers: ['direct energie']
-  })
+  for (const type of ['electricite', 'gaz']) {
+    const bills = await parseBills(type)
+
+    if (bills && bills.length)
+      await saveBills(bills, fields, {
+        requestInstance: request,
+        identifiers: ['direct energie']
+      })
+  }
 }
 
 module.exports = new BaseKonnector(start)
