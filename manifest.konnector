@@ -3,7 +3,7 @@
   "name": "Total Direct Energie",
   "type": "konnector",
   "language": "node",
-  "icon": "total.svg",
+  "icon": "total.png",
   "slug": "directenergie",
   "source": "git@github.com:konnectors/cozy-konnector-directenergie.git",
   "editor": "Brice Coquereau",
@@ -55,8 +55,8 @@
   ],
   "locales": {
     "fr": {
-      "short_description": "Récupère toutes factures et échéanciers Direct Energie",
-      "long_description": "Récupère toutes factures et échéanciers Direct Energie",
+      "short_description": "Récupère toutes factures et échéanciers Total Direct Energie",
+      "long_description": "Récupère toutes factures et échéanciers Total Direct Energie",
       "permissions": {
         "bank operations": {
           "description": "Utilisé pour relier les factures à des operations bancaires"
@@ -73,8 +73,8 @@
       }
     },
     "en": {
-      "short_description": "Retrieves all your Direct Energie invoices",
-      "long_description": "Retrieves all your Direct Energie invoices",
+      "short_description": "Retrieves all your Total Direct Energie invoices",
+      "long_description": "Retrieves all your Total Direct Energie invoices",
       "permissions": {
         "bank operations": {
           "description": "Required to link bank operations to bills"
