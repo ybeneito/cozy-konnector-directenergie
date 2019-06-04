@@ -8,7 +8,8 @@ const {
   requestFactory,
   saveBills,
   errors,
-  scrape
+  scrape,
+  utils
 } = require('cozy-konnector-libs')
 const moment = require('moment')
 const request = requestFactory({
@@ -223,9 +224,9 @@ const parseBills = async type => {
         date,
         isRefund,
         fileurl: `https://total.direct-energie.com${fileurl}`,
-        filename: `echeancier_${
-          type === 'electricite' ? 'elec' : type
-        }_${moment(date).format('YYYYMMDD')}_directenergie.pdf`,
+        filename: `${utils.formatDate(date)}_directenergie_${amount.toFixed(
+          2
+        )}EUR${vendorRef}.pdf`,
         vendor: 'Direct Energie',
         metadata: {
           importDate: new Date(),
