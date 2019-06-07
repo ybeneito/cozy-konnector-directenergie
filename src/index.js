@@ -89,7 +89,13 @@ const selectActiveAccount = async () => {
 
   const activeAccounts = accounts.filter(account => account.isActive)
   if (activeAccounts.length === 0) {
-    throw new Error('No active accounts for this login.')
+    log(
+      'error',
+      `Found no active account but there are ${
+        accounts.length
+      } accounts in total`
+    )
+    throw new Error('USER_ACTION_NEEDED.ACCOUNT_REMOVED')
   }
 
   const href = activeAccounts[0].link
