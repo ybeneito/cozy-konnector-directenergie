@@ -91,9 +91,7 @@ const selectActiveAccount = async () => {
   if (activeAccounts.length === 0) {
     log(
       'error',
-      `Found no active account but there are ${
-        accounts.length
-      } accounts in total`
+      `Found no active account but there are ${accounts.length} accounts in total`
     )
     throw new Error('USER_ACTION_NEEDED.ACCOUNT_REMOVED')
   }
