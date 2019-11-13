@@ -45,15 +45,18 @@ const doLogin = (login, password) => {
       'tx_deauthentification[form_valid]': '1',
       'tx_deauthentification[redirect_url]': '',
       'tx_deauthentification[mdp_oublie]': 'Je+me+connecte'
-    }
+    },
+    resolveWithFullResponse: true
   })
 }
 
-const checkLoginOk = $ => {
-  if ($('.formlabel-left.error').length > 0) {
+const checkLoginOk = resp => {
+  if (resp.body('.formlabel-left.error').length > 0) {
     throw new Error(errors.LOGIN_FAILED)
+  } else if (resp.request.uri.href.includes('maintenance')) {
+    log('error', `Got maintenance url: ${resp.request.uri.href}`)
+    throw new Error(errors.VENDOR_DOWN)
   }
-  return $
 }
 
 const selectActiveAccount = async () => {
@@ -240,8 +243,8 @@ const parseBills = async type => {
 
 const start = async fields => {
   const { login, password } = await checkFields(fields)
-  const $ = await doLogin(login, password)
-  await checkLoginOk($)
+  const resp = await doLogin(login, password)
+  await checkLoginOk(resp)
   await selectActiveAccount()
 
   for (const type of ['electricite', 'gaz']) {
@@ -252,7 +255,8 @@ const start = async fields => {
         requestInstance: request,
         identifiers: ['direct energie'],
         sourceAccount: this.accountId,
-        sourceAccountIdentifier: fields.login
+        sourceAccountIdentifier: fields.login,
+        linkBankOperations: false
       })
   }
 }
