@@ -88,7 +88,7 @@ const selectActiveAccount = async () => {
   )
 
   const activeAccounts = accounts.filter(account => account.isActive)
-  if (activeAccounts.length === 0) {
+  if (activeAccounts.length === 0 && accounts.length > 0) {
     log(
       'error',
       `Found no active account but there are ${accounts.length} accounts in total`
