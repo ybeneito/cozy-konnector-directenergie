@@ -211,11 +211,7 @@ const parseBills = async type => {
           filename: `echeancier_${
             type === 'electricite' ? 'elec' : type
           }_${moment(echDate).format('YYYYMMDD')}_directenergie.pdf`,
-          vendor: 'Direct Energie',
-          metadata: {
-            importDate: new Date(),
-            version: 3
-          }
+          vendor: 'Direct Energie'
         })
       }
     } else {
@@ -231,11 +227,8 @@ const parseBills = async type => {
         filename: `${utils.formatDate(date)}_directenergie_${amount.toFixed(
           2
         )}EUR${vendorRef}.pdf`,
-        vendor: 'Direct Energie',
-        metadata: {
-          importDate: new Date(),
-          version: 3
-        }
+        fileIdAttributes: ['vendorRef'],
+        vendor: 'Direct Energie'
       })
     }
   }
@@ -257,7 +250,9 @@ const start = async fields => {
     if (bills && bills.length)
       await saveBills(bills, fields, {
         requestInstance: request,
-        identifiers: ['direct energie']
+        identifiers: ['direct energie'],
+        sourceAccount: this.accountId,
+        sourceAccountIdentifier: fields.login
       })
   }
 }
