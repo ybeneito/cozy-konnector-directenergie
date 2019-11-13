@@ -255,7 +255,8 @@ const start = async fields => {
         requestInstance: request,
         identifiers: ['direct energie'],
         sourceAccount: this.accountId,
-        sourceAccountIdentifier: fields.login
+        sourceAccountIdentifier: fields.login,
+        linkBankOperations: false
       })
   }
 }
