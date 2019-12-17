@@ -14,7 +14,7 @@ const {
 } = require('cozy-konnector-libs')
 const moment = require('moment')
 const request = requestFactory({
-  // debug: true,
+  debug: 'json',
   cheerio: true,
   json: false,
   jar: true
@@ -31,8 +31,18 @@ async function start(fields) {
       'tx_demmauth_authentification[form][password]': password
     },
     validate: (statusCode, $, fullResponse) => {
-      if ($('.formlabel-left.error').length > 0) {
-        return false
+      const alert = $('.cadre--alerte')
+      if (alert.length > 0) {
+        if (
+          alert
+            .text()
+            .includes('Les informations renseignées ne correspondent pas')
+        ) {
+          return false
+        } else {
+          log('error', `Unknown error message : ${alert.text()}`)
+          throw new Error(errors.VENDOR_DOWN)
+        }
       } else if (fullResponse.request.uri.href.includes('maintenance')) {
         log('error', `Got maintenance url: ${fullResponse.request.uri.href}`)
         throw new Error(errors.VENDOR_DOWN)
@@ -65,7 +75,7 @@ const checkFields = fields => {
     throw new Error('Password is missing')
   }
   return Promise.resolve({
-    login: fields.login,
+    login: fields.login.trim(),
     password: fields.password
   })
 }
@@ -75,6 +85,7 @@ const selectActiveAccount = async () => {
   const $ = await request(
     'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes'
   )
+
   const accounts = scrape(
     $,
     {
