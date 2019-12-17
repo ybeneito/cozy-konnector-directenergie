@@ -20,7 +20,7 @@ const request = requestFactory({
   jar: true
 })
 
-const start = async fields => {
+async function start(fields) {
   const { login, password } = await checkFields(fields)
   await signin({
     requestInstance: request,
