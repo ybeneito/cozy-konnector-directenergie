@@ -8,6 +8,7 @@ const {
   requestFactory,
   saveBills,
   errors,
+  signin,
   scrape,
   utils
 } = require('cozy-konnector-libs')
@@ -18,6 +19,42 @@ const request = requestFactory({
   json: false,
   jar: true
 })
+
+const start = async fields => {
+  const { login, password } = await checkFields(fields)
+  await signin({
+    requestInstance: request,
+    url: 'https://total.direct-energie.com/clients/connexion',
+    formSelector: '#fz-form',
+    formData: {
+      'tx_demmauth_authentification[form][login]': login,
+      'tx_demmauth_authentification[form][password]': password
+    },
+    validate: (statusCode, $, fullResponse) => {
+      if ($('.formlabel-left.error').length > 0) {
+        return false
+      } else if (fullResponse.request.uri.href.includes('maintenance')) {
+        log('error', `Got maintenance url: ${fullResponse.request.uri.href}`)
+        throw new Error(errors.VENDOR_DOWN)
+      }
+      return true
+    }
+  })
+  await selectActiveAccount()
+
+  for (const type of ['electricite', 'gaz']) {
+    const bills = await parseBills(type)
+
+    if (bills && bills.length)
+      await saveBills(bills, fields, {
+        requestInstance: request,
+        identifiers: ['direct energie'],
+        sourceAccount: this.accountId,
+        sourceAccountIdentifier: fields.login,
+        linkBankOperations: false
+      })
+  }
+}
 
 const checkFields = fields => {
   log('Checking the presence of the login and password')
@@ -33,61 +70,49 @@ const checkFields = fields => {
   })
 }
 
-const doLogin = (login, password) => {
-  log('info', 'Logging in')
-  return request({
-    method: 'POST',
-    url:
-      'https://clients-total.direct-energie.com/connexion-clients-particuliers/',
-    form: {
-      'tx_deauthentification[login]': login,
-      'tx_deauthentification[password]': password,
-      'tx_deauthentification[form_valid]': '1',
-      'tx_deauthentification[redirect_url]': '',
-      'tx_deauthentification[mdp_oublie]': 'Je+me+connecte'
-    },
-    resolveWithFullResponse: true
-  })
-}
-
-const checkLoginOk = resp => {
-  if (resp.body('.formlabel-left.error').length > 0) {
-    throw new Error(errors.LOGIN_FAILED)
-  } else if (resp.request.uri.href.includes('maintenance')) {
-    log('error', `Got maintenance url: ${resp.request.uri.href}`)
-    throw new Error(errors.VENDOR_DOWN)
-  }
-}
-
 const selectActiveAccount = async () => {
   log('info', 'Selecting active account')
   const $ = await request(
-    'https://clients-total.direct-energie.com/mon-compte/gerer-mes-comptes'
+    'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes'
   )
   const accounts = scrape(
     $,
     {
       label: {
-        sel: 'h3.js-saisie_nom_compte input',
+        sel: 'input',
         attr: 'value'
       },
       isActive: {
-        sel: '.compte-actif',
+        sel: '.text--exergue',
         fn: el => Boolean($(el).length)
       },
       refClient: {
-        sel: '.liste_infos_yoom > .row:nth-child(1) > div:nth-child(2)'
+        sel: 'input',
+        attr: 'data-partenaire-id'
       },
       address: {
-        sel: '.liste_infos_yoom > .row:nth-child(3) > div:nth-child(2)'
+        sel: '.row > .columns:nth-child(2)',
+        fn: $ =>
+          $.html()
+            .split('<br>')
+            .slice(1, 2)
+            .join(' ')
+            .split('<div')[0]
+            .trim()
       },
       link: {
-        sel: 'a.btn-round',
-        attr: 'href',
-        parse: href => 'https://clients-total.direct-energie.com/' + href
+        sel: 'div',
+        fn: $ => {
+          let link = $.closest('.cadre')
+            .next('.cadre')
+            .find('a')
+            .attr('href')
+          if (link) link = 'https://total.direct-energie.com' + link
+          return link
+        }
       }
     },
-    '.ec_rattacher_compte__compte'
+    '.contenu-principal__conteneur .cadre.var--no-bottom'
   )
 
   const activeAccounts = accounts.filter(account => account.isActive)
@@ -101,9 +126,8 @@ const selectActiveAccount = async () => {
 
   const href = activeAccounts[0].link
 
-  log('info', "Going to the active account's page.")
-
-  return request(href)
+  log('info', "Going to the active account's page if needed.")
+  if (href) await request(href)
 }
 
 const normalizeAmount = amount => {
@@ -239,26 +263,6 @@ const parseBills = async type => {
   log('info', `found ${bills.length} bills`)
 
   return bills
-}
-
-const start = async fields => {
-  const { login, password } = await checkFields(fields)
-  const resp = await doLogin(login, password)
-  await checkLoginOk(resp)
-  await selectActiveAccount()
-
-  for (const type of ['electricite', 'gaz']) {
-    const bills = await parseBills(type)
-
-    if (bills && bills.length)
-      await saveBills(bills, fields, {
-        requestInstance: request,
-        identifiers: ['direct energie'],
-        sourceAccount: this.accountId,
-        sourceAccountIdentifier: fields.login,
-        linkBankOperations: false
-      })
-  }
 }
 
 module.exports = new BaseKonnector(start)
