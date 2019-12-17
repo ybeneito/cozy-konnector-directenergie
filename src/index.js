@@ -14,7 +14,7 @@ const {
 } = require('cozy-konnector-libs')
 const moment = require('moment')
 const request = requestFactory({
-  debug: 'json',
+  // debug: 'json',
   cheerio: true,
   json: false,
   jar: true
@@ -39,9 +39,6 @@ async function start(fields) {
             .includes('Les informations renseignées ne correspondent pas')
         ) {
           return false
-        } else {
-          log('error', `Unknown error message : ${alert.text()}`)
-          throw new Error(errors.VENDOR_DOWN)
         }
       } else if (fullResponse.request.uri.href.includes('maintenance')) {
         log('error', `Got maintenance url: ${fullResponse.request.uri.href}`)
