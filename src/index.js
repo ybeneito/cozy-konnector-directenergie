@@ -48,10 +48,10 @@ const start = async fields => {
     if (bills && bills.length)
       await saveBills(bills, fields, {
         requestInstance: request,
-        identifiers: ['direct energie'],
         sourceAccount: this.accountId,
         sourceAccountIdentifier: fields.login,
-        linkBankOperations: false
+        linkBankOperations: false,
+        fileIdAttributes: ['vendorRef']
       })
   }
 }
