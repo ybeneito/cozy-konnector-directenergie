@@ -53,7 +53,7 @@
   "locales": {
     "fr": {
       "short_description": "Récupère toutes factures et échéanciers Total Direct Energie",
-      "long_description": "Récupère toutes factures et échéanciers Total Direct Energie",
+      "long_description": "Total Direct Energie est un des fournisseurs d'énergie français accessible sur [https://www.total.direct-energie.com/particuliers)](www.total.direct-energie.com/particuliers).\n\n**Connectez votre compte Total Direct Energie à votre Cozy pour récupérer**\n\n- toutes vos factures\n\n**Accédez directement à vos documents dans votre Drive personnel**\n\nEn connectant votre compte Total Direct Energie, votre Cozy crée automatiquement un dossier dans **Drive > Administratif > Total Direct Energie**. Vos factures sont à portée de main et toujours accessibles !\n\n**Suivez le montant de vos factures avec Banks**\n\nLes factures récupérées sont automatiquement liées aux opérations bancaires Total Direct Energie associées à votre compte si vous utilisez l’application Banks. Finis les maux de tête à faire les comptes !\n\n**Sauvegardez vos identifiants avec Pass**\n\nEn installant le gestionnaire de mots de passe, vos identifiants sont sauvegardés une bonne fois pour toutes pour vous faciliter la connexion au site de Total Direct Energie. Adieu les mots de passe oubliés !\n\n**Configuration**\nPour connecter votre compte, il vous suffit de renseigner dans les champs :\n- votre adresse e-mail\n- votre mot de passe\n\nUne fois connecté, votre Cozy se connectera régulièrement à votre compte Total Direct Energie pour récupérer les nouveaux éléments et les historiser dans un dossier Total Direct Energie dans Drive.\n\nSi vous déconnectez votre compte Total Direct Energie, les informations déjà sauvegardées dans votre Cozy restent disponibles. Vous pouvez les supprimer manuellement par ailleurs.",
       "permissions": {
         "bank operations": {
           "description": "Utilisé pour relier les factures à des operations bancaires"
@@ -71,7 +71,7 @@
     },
     "en": {
       "short_description": "Retrieves all your Total Direct Energie invoices",
-      "long_description": "Retrieves all your Total Direct Energie invoices",
+      "long_description": "Total Direct Energie is a French energy provider. \n\n**Connect your Total Direct Energie account to your Cozy for getting**\n- your bills\n\n**Access directly to your documents in your personal Drive**\nBy connecting your Total Direct Energie account, your Cozy automatically creates a folder in **Drive > Administrative > Total Direct Energie**. \n\n**Follow the amount of your bills with Banks**\nThe recovered certificates are automatically linked to the Total Direct Energie banking transactions associated with your account if you use the Banks application. \n\n**Save your credentials with Pass**\nWith Pass, you will never forget a password again as your credentials are automatically saved in by activating the password manager. \n\n**Configuration**\nTo connect your account, you just have to fill in the fields : \n- your login (email)\n- your password\n\nOnce logged in, your Cozy will automatically connect to your Total Direct Energie account to retrieve new items and store them in a Total Direct Energie folder in Drive. \n\nIf you disconnect your Total Direct Energie account, the information already saved in your Cozy remains available. You can delete them manually elsewhere.",
       "permissions": {
         "bank operations": {
           "description": "Required to link bank operations to bills"
@@ -89,5 +89,5 @@
     }
   },
   "manifest_version": "2",
-  "banksTransactionRegExp": "\\bdirect energie\\b"
+  "banksTransactionRegExp": "\\b total direct energie\\b"
 }
