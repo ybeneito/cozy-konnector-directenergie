@@ -13,7 +13,9 @@ const moment = require('moment')
 const cheerio = require('cheerio')
 
 const CozyBrowser = require('cozy-konnector-libs/dist/libs/CozyBrowser')
-const browser = new CozyBrowser()
+const browser = new CozyBrowser({
+  waitDuration: '5s'
+})
 
 class DirectConnector extends CookieKonnector {
   async testSession() {
@@ -21,6 +23,23 @@ class DirectConnector extends CookieKonnector {
       return false
     }
     log('debug', 'Testing session')
+    await browser.loadCookieJar(this._jar._jar)
+    await browser.visit(
+      'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes',
+      {
+        waitDuration: '5s'
+      }
+    )
+
+    if (
+      browser.location.href.includes(
+        'https://total.direct-energie.com/clients/connexion'
+      )
+    ) {
+      return false
+    }
+
+    await this.saveSession(browser)
     return true
   }
 
@@ -47,7 +66,9 @@ class DirectConnector extends CookieKonnector {
 
   async authenticate(fields) {
     const { login, password } = await checkFields(fields)
-    await browser.visit('https://total.direct-energie.com/clients/connexion')
+    await browser.visit('https://total.direct-energie.com/clients/connexion', {
+      waitDuration: '5s'
+    })
     log('debug', 'fill form')
     await browser.fill('#formz-form-login', login)
     await browser.fill('#formz-form-password', password)
