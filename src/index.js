@@ -24,12 +24,17 @@ class DirectConnector extends CookieKonnector {
     }
     log('debug', 'Testing session')
     await browser.loadCookieJar(this._jar._jar)
-    await browser.visit(
-      'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes',
-      {
-        waitDuration: '5s'
-      }
-    )
+    try {
+      await browser.visit(
+        'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes',
+        {
+          waitDuration: '5s'
+        }
+      )
+    } catch (err) {
+      log('debug', err.message)
+      return false
+    }
 
     if (
       browser.location.href.includes(
