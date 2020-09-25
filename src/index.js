@@ -49,6 +49,10 @@ class DirectConnector extends CookieKonnector {
   }
 
   async fetch(fields) {
+    // As 09-2020, a captcha was display with an old and used cookie jar.
+    // We so flush the jar each time now
+    await this.resetSession()
+    // This code is now useless (session always invalid), but kept in case of fallback.
     if (!(await this.testSession())) {
       await this.authenticate(fields)
     }
