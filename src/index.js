@@ -319,7 +319,7 @@ const checkFields = fields => {
 }
 
 const normalizeAmount = amount => {
-  // ignore echeancier
+  // Ignore echeancier
   if (amount.includes('/')) return false
   return parseFloat(
     amount
