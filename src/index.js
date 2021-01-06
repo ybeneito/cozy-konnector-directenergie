@@ -290,7 +290,12 @@ class DirectConnector extends CookieKonnector {
             filename: `echeancier_${
               type === 'electricite' ? 'elec' : type
             }_${moment(echDate).format('YYYYMMDD')}_directenergie.pdf`,
-            vendor: 'Direct Energie'
+            vendor: 'Direct Energie',
+            fileAttributes: {
+              metadata: {
+                carbonCopy: true
+              }
+            }
           })
         }
       } else {
@@ -307,7 +312,12 @@ class DirectConnector extends CookieKonnector {
             2
           )}EUR${vendorRef}.pdf`,
           fileIdAttributes: ['vendorRef'],
-          vendor: 'Direct Energie'
+          vendor: 'Direct Energie',
+          fileAttributes: {
+            metadata: {
+              carbonCopy: true
+            }
+          }
         })
       }
     }
