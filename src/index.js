@@ -70,7 +70,9 @@ class DirectConnector extends CookieKonnector {
     await this.resetSession()
     // This code is now useless (session always invalid), but kept in case of fallback.
     if (!(await this.testSession())) {
+      await this.deactivateAutoSuccessfulLogin()
       await this.authenticate(fields)
+      await this.notifySuccessfulLogin()
     }
 
     await this.selectActiveAccount()
