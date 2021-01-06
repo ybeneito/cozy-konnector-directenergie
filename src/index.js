@@ -179,6 +179,10 @@ class DirectConnector extends CookieKonnector {
       throw new Error('USER_ACTION_NEEDED.ACCOUNT_REMOVED')
     }
 
+    if (!activeAccounts[0] && $('#formz-authentification-form-login').length) {
+      log('error', 'Still a login form')
+      throw new Error(errors.VENDOR_DOWN)
+    }
     const href = activeAccounts[0].link
 
     log('debug', "Going to the active account's page if needed.")
