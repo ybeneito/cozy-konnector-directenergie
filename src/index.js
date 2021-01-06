@@ -17,6 +17,22 @@ const browser = new CozyBrowser({
   waitDuration: '5s'
 })
 
+browser.pipeline.addHandler(function(browser, request) {
+  const blacklist = [
+    'https://cdn.trustcommander.net/privacy/3466/privacy_v2_23.js',
+    '2c54a23723a40d98a66f58f518388a3a'
+  ]
+  if (blacklist.some(url => request.url.includes(url))) {
+    log('info', `ignore: ${request.url}`)
+    return {
+      status: 200,
+      statusText: 'OK',
+      url: request.url,
+      _consume: async () => ''
+    }
+  }
+})
+
 class DirectConnector extends CookieKonnector {
   async testSession() {
     if (!this._jar._jar.toJSON().cookies.length) {
@@ -79,8 +95,8 @@ class DirectConnector extends CookieKonnector {
       waitDuration: '5s'
     })
     log('debug', 'fill form')
-    await browser.fill('#formz-form-login', login)
-    await browser.fill('#formz-form-password', password)
+    await browser.fill('#formz-authentification-form-login', login)
+    await browser.fill('#formz-authentification-form-password', password)
     log('debug', 'submit form')
     await browser.pressButton('.fz-btn-validation')
     log('debug', 'save session')
