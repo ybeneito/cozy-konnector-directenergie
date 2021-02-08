@@ -169,7 +169,7 @@ class DirectConnector extends CookieKonnector {
           }
         }
       },
-      '.contenu-principal__conteneur .cadre.var--no-bottom'
+      '.page > .row >  div > .cadre[data-cs-mask]'
     )
 
     const activeAccounts = accounts.filter(account => account.isActive)
