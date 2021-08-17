@@ -1,9 +1,9 @@
 {
   "version": "1.10.0",
-  "name": "Total Direct Energie",
+  "name": "TotalEnergies",
   "type": "konnector",
   "language": "node",
-  "icon": "total.png",
+  "icon": "total.svg",
   "slug": "directenergie",
   "source": "git@github.com:konnectors/cozy-konnector-directenergie.git",
   "editor": "Brice Coquereau",
