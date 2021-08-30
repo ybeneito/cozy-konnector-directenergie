@@ -42,7 +42,7 @@ class DirectConnector extends CookieKonnector {
     await browser.loadCookieJar(this._jar._jar)
     try {
       await browser.visit(
-        'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes',
+        'https://www.totalenergies.fr/clients/mon-compte/gerer-mes-comptes',
         {
           waitDuration: '5s'
         }
@@ -54,7 +54,7 @@ class DirectConnector extends CookieKonnector {
 
     if (
       browser.location.href.includes(
-        'https://total.direct-energie.com/clients/connexion'
+        'https://www.totalenergies.fr/clients/connexion'
       )
     ) {
       return false
@@ -93,7 +93,7 @@ class DirectConnector extends CookieKonnector {
 
   async authenticate(fields) {
     const { login, password } = await checkFields(fields)
-    await browser.visit('https://total.direct-energie.com/clients/connexion', {
+    await browser.visit('https://www.totalenergies.fr/clients/connexion', {
       waitDuration: '5s'
     })
     log('debug', 'fill form')
@@ -129,7 +129,7 @@ class DirectConnector extends CookieKonnector {
   async selectActiveAccount() {
     log('info', 'Selecting active account')
     const $ = await this.request(
-      'https://total.direct-energie.com/clients/mon-compte/gerer-mes-comptes'
+      'https://www.totalenergies.fr/clients/mon-compte/gerer-mes-comptes'
     )
 
     const accounts = scrape(
@@ -164,7 +164,7 @@ class DirectConnector extends CookieKonnector {
               .next('.cadre')
               .find('a')
               .attr('href')
-            if (link) link = 'https://total.direct-energie.com' + link
+            if (link) link = 'https://www.totalenergies.fr' + link
             return link
           }
         }
@@ -198,7 +198,7 @@ class DirectConnector extends CookieKonnector {
     let $
     try {
       $ = await this.request(
-        `https://total.direct-energie.com/clients/mes-factures/mes-factures-${type}/mon-historique-de-factures`
+        `https://www.totalenergies.fr/clients/mes-factures/mes-factures-${type}/mon-historique-de-factures`
       )
     } catch (err) {
       log('debug', err.message.substring(0, 60))
@@ -286,7 +286,7 @@ class DirectConnector extends CookieKonnector {
             amount,
             date,
             type,
-            fileurl: `https://total.direct-energie.com${fileurl}`,
+            fileurl: `https://www.totalenergies.fr${fileurl}`,
             filename: `echeancier_${
               type === 'electricite' ? 'elec' : type
             }_${moment(echDate).format('YYYYMMDD')}_directenergie.pdf`,
@@ -307,7 +307,7 @@ class DirectConnector extends CookieKonnector {
           amount,
           date,
           isRefund,
-          fileurl: `https://total.direct-energie.com${fileurl}`,
+          fileurl: `https://www.totalenergies.fr${fileurl}`,
           filename: `${utils.formatDate(date)}_directenergie_${amount.toFixed(
             2
           )}EUR${vendorRef}.pdf`,
