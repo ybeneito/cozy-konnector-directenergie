@@ -1,6 +1,6 @@
 {
   "name": "cozy-konnector-directenergie",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Cozy v3 Konnector for Direct Energie",
   "repository": {
     "type": "git",
