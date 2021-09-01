@@ -289,7 +289,7 @@ class DirectConnector extends CookieKonnector {
             fileurl: `https://www.totalenergies.fr${fileurl}`,
             filename: `echeancier_${
               type === 'electricite' ? 'elec' : type
-            }_${moment(echDate).format('YYYYMMDD')}_directenergie.pdf`,
+            }_${moment(echDate).format('YYYYMMDD')}_TotalEnergies.pdf`,
             vendor: 'Direct Energie',
             fileAttributes: {
               metadata: {
@@ -308,7 +308,7 @@ class DirectConnector extends CookieKonnector {
           date,
           isRefund,
           fileurl: `https://www.totalenergies.fr${fileurl}`,
-          filename: `${utils.formatDate(date)}_directenergie_${amount.toFixed(
+          filename: `${utils.formatDate(date)}_TotalEnergies_${amount.toFixed(
             2
           )}EUR${vendorRef}.pdf`,
           fileIdAttributes: ['vendorRef'],
