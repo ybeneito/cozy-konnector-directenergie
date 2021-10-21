@@ -2,207 +2,89 @@ process.env.SENTRY_DSN =
   process.env.SENTRY_DSN ||
   'https://60c5bb56449a4d9bb5bff05b2449d0af@sentry.cozycloud.cc/122'
 
-const {
-  log,
-  CookieKonnector,
-  errors,
-  scrape,
-  utils
-} = require('cozy-konnector-libs')
-const moment = require('moment')
-const cheerio = require('cheerio')
+  const {
+    BaseKonnector,
+    requestFactory,
+    scrape,
+    log,
+    utils,
+    signin
+  } = require('cozy-konnector-libs')
 
-const CozyBrowser = require('cozy-konnector-libs/dist/libs/CozyBrowser')
-const browser = new CozyBrowser({
-  waitDuration: '5s'
-})
+  const moment = require('moment')
+  const cheerio = require('cheerio')
 
-browser.pipeline.addHandler(function(browser, request) {
-  const blacklist = [
-    'https://cdn.trustcommander.net/privacy/3466/privacy_v2_23.js',
-    '2c54a23723a40d98a66f58f518388a3a'
-  ]
-  if (blacklist.some(url => request.url.includes(url))) {
-    log('info', `ignore: ${request.url}`)
-    return {
-      status: 200,
-      statusText: 'OK',
-      url: request.url,
-      _consume: async () => ''
-    }
-  }
-})
+  const request = requestFactory({
+    // The debug mode shows all the details about HTTP requests and responses. Very useful for
+    // debugging but very verbose. This is why it is commented out by default
+    // debug: true,
+    // Activates [cheerio](https://cheerio.js.org/) parsing on each page
+    cheerio: true,
+    // If cheerio is activated do not forget to deactivate json parsing (which is activated by
+    // default in cozy-konnector-libs
+    json: false,
+    // This allows request-promise to keep cookies between requests
+    jar: true
+  })
 
-class DirectConnector extends CookieKonnector {
-  async testSession() {
-    if (!this._jar._jar.toJSON().cookies.length) {
-      return false
-    }
-    log('debug', 'Testing session')
-    await browser.loadCookieJar(this._jar._jar)
-    try {
-      await browser.visit(
-        'https://www.totalenergies.fr/clients/mon-compte/gerer-mes-comptes',
-        {
-          waitDuration: '5s'
-        }
-      )
-    } catch (err) {
-      log('debug', err.message)
-      return false
-    }
+  const VENDOR = 'template'
+  const baseUrl = 'https://www.totalenergies.fr'
 
-    if (
-      browser.location.href.includes(
-        'https://www.totalenergies.fr/clients/connexion'
-      )
-    ) {
-      return false
-    }
+  const courl = baseUrl + '/clients/connexion'
 
-    await this.saveSession(browser)
-    return true
-  }
+  module.exports = new BaseKonnector(start)
 
-  async fetch(fields) {
-    // As 09-2020, a captcha was display with an old and used cookie jar.
-    // We so flush the jar each time now
-    await this.resetSession()
-    // This code is now useless (session always invalid), but kept in case of fallback.
-    if (!(await this.testSession())) {
-      await this.deactivateAutoSuccessfulLogin()
-      await this.authenticate(fields)
-      await this.notifySuccessfulLogin()
-    }
+  // The start function is run by the BaseKonnector instance only when it got all the account
+  // information (fields). When you run this connector yourself in "standalone" mode or "dev" mode,
+  // the account information come from ./konnector-dev-config.json file
+  // cozyParameters are static parameters, independents from the account. Most often, it can be a
+  // secret api key.
+  async function start(fields, cozyParameters) {
+    log('info', 'Identification')
+    if (cozyParameters) log('debug', 'Paramètres trouvés')
+    await authenticate.bind(this)(fields.login, fields.password)
+    log('info', 'Vous êtes connecté')
+    const bills = await parseBill()
 
-    await this.selectActiveAccount()
-
-    for (const type of ['electricite', 'gaz']) {
-      const bills = await this.parseBills(type)
-
-      if (bills && bills.length)
-        await this.saveBills(bills, fields, {
-          linkBankOperations: false,
-          fileIdAttributes: ['vendorRef']
-        })
-    }
-    this.saveSession()
-    // I don't know why zombiejs keeps running even if all promises are resolved
-    process.exit(0)
-  }
-
-  async authenticate(fields) {
-    const { login, password } = await checkFields(fields)
-    await browser.visit('https://www.totalenergies.fr/clients/connexion', {
-      waitDuration: '5s'
+    await this.saveBills(bills, fields, {
+      fileIdAttributes: ['vendor', 'contractId', 'date', 'amount'],
+      linkBankOperations: false,
+      identifiers: ['Total energie'],
+      sourceAccount: this.accountId,
+      sourceAccountIdentifier: fields.login
     })
-    log('debug', 'fill form')
-    await browser.fill('#formz-authentification-form-login', login)
-    await browser.fill('#formz-authentification-form-password', password)
-    log('debug', 'submit form')
-    await browser.pressButton('.fz-btn-validation')
-    log('debug', 'save session')
-    await this.saveSession(browser)
-
-    // validate the resulting page
-    const $ = cheerio.load(await browser.html())
-    const alert = $('.cadre--alerte')
-
-    if (alert.length > 0) {
-      if (
-        alert
-          .text()
-          .includes('Les informations renseignées ne correspondent pas')
-      ) {
-        throw new Error(errors.LOGIN_FAILED)
-      }
-    } else if (browser.location.href.includes('maintenance')) {
-      log('error', `Got maintenance url: ${browser.location.href}`)
-      throw new Error(errors.VENDOR_DOWN)
-    }
-    await browser.destroy()
-    // validate: (statusCode, $, fullResponse) => {
-    // }
-    // })
+    log('info', 'Fin de la récupératiob')
   }
 
-  async selectActiveAccount() {
-    log('info', 'Selecting active account')
-    const $ = await this.request(
-      'https://www.totalenergies.fr/clients/mon-compte/gerer-mes-comptes'
-    )
-
-    const accounts = scrape(
-      $,
-      {
-        label: {
-          sel: 'input',
-          attr: 'value'
-        },
-        isActive: {
-          sel: '.text--exergue',
-          fn: el => Boolean($(el).length)
-        },
-        refClient: {
-          sel: 'input',
-          attr: 'data-partenaire-id'
-        },
-        address: {
-          sel: '.row > .columns:nth-child(2)',
-          fn: $ =>
-            $.html()
-              .split('<br>')
-              .slice(1, 2)
-              .join(' ')
-              .split('<div')[0]
-              .trim()
-        },
-        link: {
-          sel: 'div',
-          fn: $ => {
-            let link = $.closest('.cadre')
-              .next('.cadre')
-              .find('a')
-              .attr('href')
-            if (link) link = 'https://www.totalenergies.fr' + link
-            return link
-          }
-        }
+  async function authenticate(username, password) {
+    log('debug', 'Authentification en cours')
+    const $ = await signin({
+      url: courl,
+      formSelector: '#fz-authentificationForm',
+      formData: {
+        'tx_demmauth_authentification[authentificationForm][login]': username,
+        'tx_demmauth_authentification[authentificationForm][password]': password
       },
-      '.page > .row >  div > .cadre[data-cs-mask]'
-    )
-
-    const activeAccounts = accounts.filter(account => account.isActive)
-    if (activeAccounts.length === 0 && accounts.length > 0) {
-      log(
-        'error',
-        `Found no active account but there are ${accounts.length} accounts in total`
-      )
-      throw new Error('USER_ACTION_NEEDED.ACCOUNT_REMOVED')
-    }
-
-    if (!activeAccounts[0] && $('#formz-authentification-form-login').length) {
-      log('error', 'Still a login form')
-      throw new Error(errors.VENDOR_DOWN)
-    }
-    const href = activeAccounts[0].link
-
-    log('debug', "Going to the active account's page if needed.")
-    if (href) {
-      await this.request(href)
-    }
+      resolveWithFullResponse: true
+    })
+      .catch(err => {
+        log('err', err)
+      })
+      .then(resp => {
+        return resp
+      })
   }
 
-  async parseBills(type) {
-    log('debug', 'Parsing bills')
+  async function parseBill() {
+    log('debug', 'Vérification des factures')
     let $
     try {
-      $ = await this.request(
-        `https://www.totalenergies.fr/clients/mes-factures/mes-factures-${type}/mon-historique-de-factures`
+      $ = await request(
+        `https://www.totalenergies.fr/clients/mes-factures/mes-factures-electricite/mon-historique-de-factures`
       )
     } catch (err) {
       log('debug', err.message.substring(0, 60))
-      log('debug', `found no ${type} bills on this account`)
+      log('debug', `Pas de facture trouvée pour ce compte`)
       return []
     }
 
@@ -285,12 +167,11 @@ class DirectConnector extends CookieKonnector {
             label,
             amount,
             date,
-            type,
             fileurl: `https://www.totalenergies.fr${fileurl}`,
-            filename: `echeancier_${
-              type === 'electricite' ? 'elec' : type
-            }_${moment(echDate).format('YYYYMMDD')}_TotalEnergies.pdf`,
-            vendor: 'Direct Energie',
+            filename: `echeancier_${moment(echDate).format(
+              'YYYYMMDD'
+            )}_TotalEnergies.pdf`,
+            vendor: 'Total Energie',
             fileAttributes: {
               metadata: {
                 carbonCopy: true
@@ -321,42 +202,16 @@ class DirectConnector extends CookieKonnector {
         })
       }
     }
-
-    log('info', `found ${bills.length} bills`)
-
     return bills
   }
-}
 
-const connector = new DirectConnector({
-  // debug: true,
-  cheerio: true,
-  json: false
-})
-
-connector.run()
-
-const checkFields = fields => {
-  log('Checking the presence of the login and password')
-  if (fields.login === undefined) {
-    throw new Error('Login is missing')
+  const normalizeAmount = amount => {
+    if (amount.includes('/')) return false
+    return parseFloat(
+      amount
+        .replace('€', '')
+        .replace(',', '.')
+        .replace(' ', '')
+        .trim()
+    )
   }
-  if (fields.password === undefined) {
-    throw new Error('Password is missing')
-  }
-  return Promise.resolve({
-    login: fields.login.trim(),
-    password: fields.password
-  })
-}
-
-const normalizeAmount = amount => {
-  // Ignore echeancier
-  if (amount.includes('/')) return false
-  return parseFloat(
-    amount
-      .replace('€', '')
-      .replace(',', '.')
-      .trim()
-  )
-}
